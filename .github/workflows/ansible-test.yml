@@ -37,20 +37,26 @@ jobs:
         with:
           python-version: 3.8
 
-      # Install the head of the given branch (devel, stable-2.10)
       - name: Install ansible-base (devel)
         run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
 
-      # run ansible-test sanity inside of Docker.
-      # The docker container has all the pinned dependencies that are required
-      # and all python versions ansible supports.
-      - name: Run
+      - name: Repro no deprecation message
         env:
           ANSIBLE_COLLECTIONS_PATHS: '.'
           ANSIBLE_FORCE_COLOR: 'true'
           ANSIBLE_FAKE: 'hi'
         run: |
           ansible localhost -m debug -a msg="{{ lookup('community.hashi_vault.mcve') }}" -v
+        continue-on-error: true
+        #working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
+
+      - name: Show with workaround
+        env:
+          ANSIBLE_COLLECTIONS_PATHS: '.'
+          ANSIBLE_FORCE_COLOR: 'true'
+          ANSIBLE_FAKE: 'hi'
+        run: |
+          ansible localhost -m debug -a msg="{{ lookup('community.hashi_vault.mcve_workaround') }}" -v
         continue-on-error: true
         #working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
 
