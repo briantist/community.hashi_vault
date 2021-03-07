@@ -61,6 +61,7 @@ jobs:
 
   units:
     runs-on: ubuntu-latest
+    container: quay.io/ansible/default-test-container
     name: Units (Ⓐ${{ matrix.ansible }})
     strategy:
       # As soon as the first unit test fails, cancel the others to free up the CI queue
@@ -77,12 +78,12 @@ jobs:
         with:
           path: ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          # it is just required to run that once as "ansible-test units" in the docker image
-          # will run on all python versions it supports.
-          python-version: 3.8
+      # - name: Set up Python
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     # it is just required to run that once as "ansible-test units" in the docker image
+      #     # will run on all python versions it supports.
+      #     python-version: 3.8
 
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -94,7 +95,8 @@ jobs:
 
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units -v --color --docker --coverage
+        run: ansible-test units -v --color --coverage
+        # run: ansible-test units -v --color --docker --coverage
         working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
 
         # ansible-test support producing code coverage date
@@ -120,6 +122,11 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     name: I (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }} | Vault ${{ matrix.vault }})
+    services:
+      vault:
+        image: vault:${{ matrix.vault }}
+        ports:
+          - 8200:8200
     strategy:
       fail-fast: false
       matrix:
