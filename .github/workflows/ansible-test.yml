@@ -225,7 +225,7 @@ jobs:
 
       # Run the integration tests
       - name: Run integration test
-        run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --requirements --coverage
+        run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --requirements --allow-destructive --coverage
         # run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --docker --coverage
         working-directory: ${{ env.COLLECTION_PATH }}
 
