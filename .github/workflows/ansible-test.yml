@@ -95,7 +95,7 @@ jobs:
 
       # Run the unit tests
       - name: Run unit test
-        run: ansible-test units -v --color --coverage
+        run: ansible-test units -v --color --requirements --coverage
         # run: ansible-test units -v --color --docker --coverage
         working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
 

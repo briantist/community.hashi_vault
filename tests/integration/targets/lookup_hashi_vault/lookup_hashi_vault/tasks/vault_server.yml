@@ -50,9 +50,9 @@
           environment:
             VAULT_ADDR: 'http://localhost:8200'
           block:
-            - name: 'Start vault server (dev mode enabled)'
-              shell: 'nohup {{ vault_cmd }} server -dev -config {{ local_temp_dir }}/vault_config.hcl </dev/null >/dev/null 2>&1 &'
-              notify: test_managed_vault_cleanup
+            # - name: 'Start vault server (dev mode enabled)'
+            #   shell: 'nohup {{ vault_cmd }} server -dev -config {{ local_temp_dir }}/vault_config.hcl </dev/null >/dev/null 2>&1 &'
+            #   notify: test_managed_vault_cleanup
 
             - name: 'Create generic secrets engine'
               command: '{{ vault_cmd }} secrets enable -path=gen generic'
