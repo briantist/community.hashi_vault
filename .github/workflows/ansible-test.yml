@@ -121,12 +121,13 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
+    container: quay.io/ansible/default-test-container
     name: I (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }} | Vault ${{ matrix.vault }})
     services:
       vault:
         image: vault:${{ matrix.vault }}
-        ports:
-          - 8200:8200
+        # ports:
+        #   - 8200:8200
     strategy:
       fail-fast: false
       matrix:
@@ -224,7 +225,8 @@ jobs:
 
       # Run the integration tests
       - name: Run integration test
-        run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --docker --coverage
+        run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --requirements --coverage
+        # run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --docker --coverage
         working-directory: ${{ env.COLLECTION_PATH }}
 
         # ansible-test support producing code coverage date
