@@ -27,7 +27,45 @@ jobs:
 #
 # https://docs.ansible.com/ansible/latest/dev_guide/testing_sanity.html
 
+  mcve:
+    name: Lookup Deprecations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install ansible-base (devel)
+        run: pip install https://github.com/ansible/ansible/archive/devel.tar.gz --disable-pip-version-check
+
+      - name: Repro no deprecation message
+        env:
+          ANSIBLE_COLLECTIONS_PATHS: '.'
+          ANSIBLE_FORCE_COLOR: 'true'
+          ANSIBLE_FAKE: 'hi'
+        run: |
+          ansible localhost -m debug -a msg="{{ lookup('community.hashi_vault.mcve') }}" -v
+        continue-on-error: true
+        #working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
+
+      - name: Show with workaround
+        env:
+          ANSIBLE_COLLECTIONS_PATHS: '.'
+          ANSIBLE_FORCE_COLOR: 'true'
+          ANSIBLE_FAKE: 'hi'
+        run: |
+          ansible localhost -m debug -a msg="{{ lookup('community.hashi_vault.mcve_workaround') }}" -v
+        continue-on-error: true
+        #working-directory: ./ansible_collections/${{ env.NAMESPACE }}/${{ env.COLLECTION_NAME }}
+
   sanity:
+    if: 'false'
     name: Sanity (Ⓐ${{ matrix.ansible }})
     strategy:
       matrix:
@@ -125,6 +163,7 @@ jobs:
 # https://github.com/ansible-collections/community.zabbix/tree/master/.github/workflows
 
   integration:
+    if: 'false'
     runs-on: ubuntu-latest
     name: I (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }} | Vault ${{ matrix.vault }})
     strategy:
