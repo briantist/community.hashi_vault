@@ -30,6 +30,7 @@ DOCUMENTATION = """
     - In check mode, this module will not create a token, and will instead return a basic structure with an empty token.
       However, this may not be useful if the token is required for follow on tasks.
       It may be better to use this module with I(check_mode=no) in order to have a valid token that can be used.
+    - Ephemeral tokens B(will not be revoked) when I(revoke_ephemeral_token=true) unless I(orphan=true), otherwise the child tokens would also be revoked.
   extends_documentation_fragment:
     - community.hashi_vault.connection
     - community.hashi_vault.connection.plugins
@@ -166,7 +167,8 @@ class LookupModule(HashiVaultLookupBase):
 
         pass_thru_options = self._options_adapter.get_filled_options(*self.PASS_THRU_OPTION_NAMES)
 
-        if self.get_option('orphan'):
+        orphan = self.get_option('orphan')
+        if orphan:
             pass_thru_options['no_parent'] = True
 
         legacy_options = pass_thru_options.copy()
@@ -177,7 +179,11 @@ class LookupModule(HashiVaultLookupBase):
 
         response = None
 
-        if self.get_option('orphan'):
+        revoke_token = {}
+        if orphan:
+            revoke_token['revoke_token'] = None
+
+        if orphan:
             # this method is deprecated, but it's the only way through hvac to get
             # at the /create-orphan endpoint at this time.
             # See: https://github.com/hvac/hvac/issues/758
@@ -186,12 +192,15 @@ class LookupModule(HashiVaultLookupBase):
             except AttributeError:
                 display.warning("'create_token' method was not found. Attempting method that requires root privileges.")
             except Exception as e:
+                self.authenticator.logout(client, **revoke_token)
                 raise AnsibleError(e)
 
         if response is None:
             try:
                 response = client.auth.token.create(**pass_thru_options)
             except Exception as e:
+                self.authenticator.logout(client, **revoke_token)
                 raise AnsibleError(e)
 
+        self.authenticator.logout(client, **revoke_token)
         return [response]
